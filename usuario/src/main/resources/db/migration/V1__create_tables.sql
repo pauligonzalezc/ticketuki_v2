@@ -14,6 +14,6 @@ CREATE TABLE IF NOT EXISTS usuario (
     a_paterno VARCHAR(25) NOT NULL,
     a_materno VARCHAR(25) NOT NULL,
     email VARCHAR(50) NOT NULL UNIQUE,
-    direccion_id INT NOT NULL,
-    FOREIGN KEY (direccion_id) REFERENCES direccion(id_direccion) ON DELETE CASCADE
+    direccion_id_direccion INT NOT NULL,
+    FOREIGN KEY (direccion_id_direccion) REFERENCES direccion(id_direccion) ON DELETE CASCADE
 );
