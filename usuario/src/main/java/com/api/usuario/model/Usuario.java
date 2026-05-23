@@ -33,7 +33,7 @@ public class Usuario {
     @Column(name = "a_materno", nullable = false, length = 25)
     private String a_materno;
 
-    @Column(name = "mail", nullable = false, unique = true, length = 50)
+    @Column(name = "email", nullable = false, unique = true, length = 50)
     private String email;
 
     @ManyToOne
