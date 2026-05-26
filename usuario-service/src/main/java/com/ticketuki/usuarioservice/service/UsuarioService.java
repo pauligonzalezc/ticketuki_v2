@@ -68,17 +68,14 @@ public class UsuarioService {
     public UsuarioResponseDTO crearUsuario(UsuarioRequestDTO usuarioDTO) {
         log.info("Creando nuevo usuario con run: {}", usuarioDTO.getRun());
 
-        DireccionUsuario direccion = null;
-        if (usuarioDTO.getDireccion() != null) {
-            direccion = new DireccionUsuario(
-                null,
-                usuarioDTO.getDireccion().getCalle(),
-                usuarioDTO.getDireccion().getRegion(),
-                usuarioDTO.getDireccion().getComuna(),
-                usuarioDTO.getDireccion().getNum_calle()
-            );
-            direccion = direccionRepository.save(direccion);
-        }
+        DireccionUsuario direccion = new DireccionUsuario(
+            null,
+            usuarioDTO.getDireccion().getCalle(),
+            usuarioDTO.getDireccion().getRegion(),
+            usuarioDTO.getDireccion().getComuna(),
+            usuarioDTO.getDireccion().getNum_calle()
+        );
+        direccion = direccionRepository.save(direccion);
 
         Usuario usuario = new Usuario(
             null,
@@ -103,6 +100,7 @@ public class UsuarioService {
         return toResponseDTO(usuarioGuardado);
     }
 
+    @Transactional
     public UsuarioResponseDTO actualizarUsuario(Long id, UsuarioRequestDTO usuarioDTO) {
         log.info("Actualizando usuario con id: {}", id);
         Usuario usuario = usuarioRepository.findById(id)
