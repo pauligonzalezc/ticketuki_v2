@@ -22,7 +22,7 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final DireccionUsuarioRepository direccionRepository;
 
-    private UsuarioResponseDTO mapToResponse(Usuario usuario) {
+    private UsuarioResponseDTO toResponseDTO(Usuario usuario) {
         DireccionDTO direccionDTO = null;
         if (usuario.getDireccion() != null) {
             direccionDTO = new DireccionDTO(
@@ -48,7 +48,7 @@ public class UsuarioService {
         log.info("Obteniendo todos los usuarios");
         return usuarioRepository.findAll()
             .stream()
-            .map(this::mapToResponse)
+            .map(this::toResponseDTO)
             .collect(Collectors.toList());
     }
 
@@ -59,7 +59,7 @@ public class UsuarioService {
                     log.warn("Usuario no encontrado con ID: {}", id);
                     return new UsuarioNotFoundException("Usuario no encontrado con ID: " + id);
                 });
-        return mapToResponse(usuario);
+        return toResponseDTO(usuario);
     }
 
     public UsuarioResponseDTO crearUsuario(UsuarioRequestDTO usuarioDTO) {
@@ -97,7 +97,7 @@ public class UsuarioService {
         Usuario usuarioGuardado = usuarioRepository.save(usuario);
         log.info("Usuario creado exitosamente con ID: {}", usuarioGuardado.getId_usuario());
 
-        return mapToResponse(usuarioGuardado);
+        return toResponseDTO(usuarioGuardado);
     }
 
     public UsuarioResponseDTO actualizarUsuario(Long id, UsuarioRequestDTO usuarioDTO) {
@@ -124,7 +124,7 @@ public class UsuarioService {
 
         Usuario usuarioActualizado = usuarioRepository.save(usuario);
         log.info("Usuario actualizado exitosamente: {}", id);
-        return mapToResponse(usuarioActualizado);
+        return toResponseDTO(usuarioActualizado);
     }
 
     public void eliminarUsuario(Long id) {
