@@ -1,0 +1,8 @@
+/Users/pgonzalez/Desktop/DUOCUC/SEMESTRE 3/FULLSTACK_1/before/NUEVO/nuevo_ticketuki/evento-service/src/main/java/com/ticketuki/eventoservice/EventoServiceApplication.java
+/Users/pgonzalez/Desktop/DUOCUC/SEMESTRE 3/FULLSTACK_1/before/NUEVO/nuevo_ticketuki/evento-service/src/main/java/com/ticketuki/eventoservice/config/WebClientConfig.java
+/Users/pgonzalez/Desktop/DUOCUC/SEMESTRE 3/FULLSTACK_1/before/NUEVO/nuevo_ticketuki/evento-service/src/main/java/com/ticketuki/eventoservice/controller/EventoController.java
+/Users/pgonzalez/Desktop/DUOCUC/SEMESTRE 3/FULLSTACK_1/before/NUEVO/nuevo_ticketuki/evento-service/src/main/java/com/ticketuki/eventoservice/dto/EventoDTO.java
+/Users/pgonzalez/Desktop/DUOCUC/SEMESTRE 3/FULLSTACK_1/before/NUEVO/nuevo_ticketuki/evento-service/src/main/java/com/ticketuki/eventoservice/model/EstadoEvento.java
+/Users/pgonzalez/Desktop/DUOCUC/SEMESTRE 3/FULLSTACK_1/before/NUEVO/nuevo_ticketuki/evento-service/src/main/java/com/ticketuki/eventoservice/model/Evento.java
+/Users/pgonzalez/Desktop/DUOCUC/SEMESTRE 3/FULLSTACK_1/before/NUEVO/nuevo_ticketuki/evento-service/src/main/java/com/ticketuki/eventoservice/repository/EventoRepository.java
+/Users/pgonzalez/Desktop/DUOCUC/SEMESTRE 3/FULLSTACK_1/before/NUEVO/nuevo_ticketuki/evento-service/src/main/java/com/ticketuki/eventoservice/service/EventoService.java
