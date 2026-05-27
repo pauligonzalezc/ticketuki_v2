@@ -20,5 +20,6 @@ public class RecintoDTO {
     private Integer capacidad_total;
 
     @Valid
+    @NotNull(message = "La dirección del recinto es obligatoria")
     private DireccionRecintoDTO direccion;
 }

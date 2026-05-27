@@ -2,6 +2,7 @@ package com.ticketuki.recintoservice.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,10 +18,11 @@ public class Recinto {
     @Column(name = "id_recinto")
     private Long id_recinto;
 
-    @NotBlank
+    @NotBlank(message = "El nombre del recinto es requerido")
     @Column(name = "nombre_recinto", nullable = false, length = 50)
     private String nombre_recinto;
 
+    @NotNull(message = "La capacidad total es requerida")
     @Column(name = "capacidad_total", nullable = false)
     private Integer capacidad_total;
 

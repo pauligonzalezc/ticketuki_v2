@@ -14,10 +14,11 @@ import lombok.NoArgsConstructor;
 public class Sector {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     @Column(name = "id_sector")
     private Long id_sector;
 
-    @NotBlank
+    @NotBlank(message = "El nombre del sector es requerido")
     @Column(name = "nombre_sector", nullable = false, length = 25)
     private String nombre_sector;
 
