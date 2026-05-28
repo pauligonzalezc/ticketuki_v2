@@ -8,7 +8,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class WebClientConfig {
 
-    @Value("${ms.evento.url:http://localhost:8001}")
+    @Value("${ms.evento.url:http://localhost:8003}")
     private String eventoUrl;
 
     @Bean
