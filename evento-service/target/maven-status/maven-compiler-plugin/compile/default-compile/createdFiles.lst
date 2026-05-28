@@ -1,8 +1,0 @@
-com/ticketuki/eventoservice/model/EstadoEvento.class
-com/ticketuki/eventoservice/service/EventoService.class
-com/ticketuki/eventoservice/model/Evento.class
-com/ticketuki/eventoservice/dto/EventoDTO.class
-com/ticketuki/eventoservice/EventoServiceApplication.class
-com/ticketuki/eventoservice/repository/EventoRepository.class
-com/ticketuki/eventoservice/controller/EventoController.class
-com/ticketuki/eventoservice/config/WebClientConfig.class

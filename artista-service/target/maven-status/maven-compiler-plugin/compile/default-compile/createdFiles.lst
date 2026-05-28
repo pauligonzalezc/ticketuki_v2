@@ -1,8 +1,0 @@
-com/ticketuki/artistaservice/service/ArtistaService.class
-com/ticketuki/artistaservice/model/Artista_Evento.class
-com/ticketuki/artistaservice/ArtistaServiceApplication.class
-com/ticketuki/artistaservice/controller/ArtistaController.class
-com/ticketuki/artistaservice/model/Artista.class
-com/ticketuki/artistaservice/dto/ArtistaDTO.class
-com/ticketuki/artistaservice/repository/ArtistaRepository.class
-com/ticketuki/artistaservice/config/WebClientConfig.class
