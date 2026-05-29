@@ -2,6 +2,7 @@ package com.ticketuki.promocionservice.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -31,6 +32,18 @@ public class GlobalExceptionHandler {
             errors.put(fieldName, error.getDefaultMessage());
         });
         return buildResponse(HttpStatus.BAD_REQUEST, "Validación fallida", request, errors);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleIntegridad(DataIntegrityViolationException ex, HttpServletRequest request) {
+        log.warn("Conflicto de integridad de datos: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, "Ya existe un registro con esos datos únicos", request, null);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
+        log.warn("Argumento inválido: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request, null);
     }
 
     @ExceptionHandler(Exception.class)

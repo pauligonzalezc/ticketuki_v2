@@ -1,7 +1,9 @@
 package com.ticketuki.ventaservice.service;
 
+import com.ticketuki.ventaservice.dto.DetalleVentaRequestDTO;
 import com.ticketuki.ventaservice.dto.DetalleVentaResponseDTO;
 import com.ticketuki.ventaservice.dto.EstadoVentaDTO;
+import com.ticketuki.ventaservice.dto.PromocionDTO;
 import com.ticketuki.ventaservice.dto.VentaRequestDTO;
 import com.ticketuki.ventaservice.dto.VentaResponseDTO;
 import com.ticketuki.ventaservice.model.DetalleVenta;
@@ -11,26 +13,37 @@ import com.ticketuki.ventaservice.exception.VentaNotFoundException;
 import com.ticketuki.ventaservice.repository.VentaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class VentaService {
 
-    private static final double PORCENTAJE_IVA      = 0.19;
-    private static final double PORCENTAJE_COMISION  = 0.10;
+    private static final double PORCENTAJE_IVA     = 0.19;
+    private static final double PORCENTAJE_COMISION = 0.10;
 
     private final VentaRepository ventaRepository;
     private final DetalleVentaRepository detalleVentaRepository;
     private final WebClient webClient;
+    private final WebClient promocionWebClient;
+
+    public VentaService(VentaRepository ventaRepository,
+                        DetalleVentaRepository detalleVentaRepository,
+                        WebClient webClient,
+                        @Qualifier("promocionWebClient") WebClient promocionWebClient) {
+        this.ventaRepository = ventaRepository;
+        this.detalleVentaRepository = detalleVentaRepository;
+        this.webClient = webClient;
+        this.promocionWebClient = promocionWebClient;
+    }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -49,19 +62,61 @@ public class VentaService {
         }
     }
 
-    private DetalleVenta calcularDetalle(com.ticketuki.ventaservice.dto.DetalleVentaRequestDTO dto, Long ventaId) {
-        int precioIva    = (int) Math.round(dto.getPrecio_neto() * PORCENTAJE_IVA);
-        int comision     = (int) Math.round(dto.getPrecio_neto() * PORCENTAJE_COMISION);
-        int precioTotal  = dto.getPrecio_neto() + precioIva + comision;
+    private PromocionDTO obtenerPromocionActiva(Long promocionId) {
+        try {
+            PromocionDTO promo = promocionWebClient.get()
+                    .uri("/promociones/{id}", promocionId)
+                    .retrieve()
+                    .bodyToMono(PromocionDTO.class)
+                    .block();
+            if (promo == null) return null;
+            LocalDate hoy = LocalDate.now();
+            if (hoy.isBefore(promo.getFecha_inicio()) || hoy.isAfter(promo.getFecha_expiracion())) {
+                throw new IllegalArgumentException("La promoción " + promocionId + " no está vigente");
+            }
+            return promo;
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (WebClientResponseException.NotFound e) {
+            throw new IllegalArgumentException("Promoción no encontrada: " + promocionId);
+        } catch (Exception e) {
+            log.warn("No se pudo validar la promoción {}: {}", promocionId, e.getMessage());
+            return null;
+        }
+    }
+
+    private DetalleVenta calcularDetalle(DetalleVentaRequestDTO dto, Long ventaId) {
+        int descuentoMonto = 0;
+        Long promocionId = null;
+
+        // Si viene un id de promoción, validar que exista y esté vigente, luego aplicar el descuento
+        if (dto.getPromocion_id() != null) {
+            PromocionDTO promo = obtenerPromocionActiva(dto.getPromocion_id());
+            if (promo != null) {
+                descuentoMonto = (int) Math.round(dto.getPrecio_neto() * promo.getDescuento() / 100.0);
+                promocionId = promo.getId_promocion();
+                log.info("Promoción {} aplicada: descuento de {} sobre precio neto {}",
+                        promocionId, descuentoMonto, dto.getPrecio_neto());
+            }
+        }
+
+        // El IVA y la comisión se calculan sobre el precio ya descontado
+        int precioBase  = dto.getPrecio_neto() - descuentoMonto;
+        int precioIva   = (int) Math.round(precioBase * PORCENTAJE_IVA);
+        int comision    = (int) Math.round(precioBase * PORCENTAJE_COMISION);
+        int precioTotal = precioBase + precioIva + comision;
+
         return new DetalleVenta(null, dto.getCantidad_ticket(), dto.getPrecio_neto(),
                 precioIva, precioTotal, comision,
-                dto.getUsuario_id_usuario(), ventaId, dto.getSector_id_sector());
+                dto.getUsuario_id_usuario(), ventaId, dto.getSector_id_sector(),
+                promocionId, descuentoMonto);
     }
 
     private DetalleVentaResponseDTO mapDetalleToDTO(DetalleVenta d) {
         return new DetalleVentaResponseDTO(d.getId_detalle(), d.getCantidad_ticket(),
                 d.getPrecio_neto(), d.getPrecio_iva(), d.getPrecio_total(), d.getComision(),
-                d.getUsuario_id_usuario(), d.getVenta_id_venta(), d.getSector_id_sector());
+                d.getUsuario_id_usuario(), d.getVenta_id_venta(), d.getSector_id_sector(),
+                d.getPromocion_id(), d.getDescuento_monto());
     }
 
     private VentaResponseDTO toResponseDTO(Venta v, List<DetalleVentaResponseDTO> detalles) {
@@ -79,10 +134,10 @@ public class VentaService {
         // 1. Validar que el estado existe en ms-estado
         EstadoVentaDTO estado = obtenerEstado(dto.getEstado_venta_id_estado());
 
-        // 2. Calcular detalles en memoria (IVA 19%, comisión 10%)
+        // 2. Calcular detalles en memoria (descuento, IVA 19%, comisión 10%)
         List<DetalleVenta> detallesCalculados = dto.getDetalles().stream()
                 .map(d -> calcularDetalle(d, null))
-                .collect(Collectors.toList());
+                .toList();
 
         // 3. Calcular monto total sumando precio_total de cada detalle
         int montoTotal = detallesCalculados.stream()
@@ -102,7 +157,7 @@ public class VentaService {
         // 6. Construir respuesta completa
         List<DetalleVentaResponseDTO> detallesDTO = detallesGuardados.stream()
                 .map(this::mapDetalleToDTO)
-                .collect(Collectors.toList());
+                .toList();
 
         return new VentaResponseDTO(ventaGuardada.getId_venta(), ventaGuardada.getFecha_venta(),
                 ventaGuardada.getMedio_pago(), ventaGuardada.getCod_autorizacion(),
@@ -127,7 +182,7 @@ public class VentaService {
             List<DetalleVentaResponseDTO> detalles = detalleVentaRepository
                     .findByVenta_id_venta(v.getId_venta()).stream()
                     .map(this::mapDetalleToDTO)
-                    .collect(Collectors.toList());
+                    .toList();
             return toResponseDTO(v, detalles);
         });
     }
@@ -136,14 +191,14 @@ public class VentaService {
     public List<VentaResponseDTO> listarVentas() {
         return ventaRepository.findAll().stream()
                 .map(v -> toResponseDTO(v, null))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public List<VentaResponseDTO> listarPorPeriodo(LocalDateTime inicio, LocalDateTime fin) {
         return ventaRepository.findByFecha_ventaBetween(inicio, fin).stream()
                 .map(v -> toResponseDTO(v, null))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // ── Operaciones de detalle ────────────────────────────────────────────────
@@ -157,6 +212,6 @@ public class VentaService {
     public List<DetalleVentaResponseDTO> listarDetallesPorVenta(Long ventaId) {
         return detalleVentaRepository.findByVenta_id_venta(ventaId).stream()
                 .map(this::mapDetalleToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

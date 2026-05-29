@@ -49,4 +49,10 @@ public class DetalleVenta {
     @NotNull
     @Column(name = "sector_id_sector", nullable = false)
     private Long sector_id_sector;
+
+    @Column(name = "promocion_id")
+    private Long promocion_id;
+
+    @Column(name = "descuento_monto")
+    private Integer descuento_monto;
 }

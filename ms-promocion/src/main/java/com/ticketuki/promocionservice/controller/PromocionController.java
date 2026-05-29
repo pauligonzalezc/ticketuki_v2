@@ -1,6 +1,7 @@
 package com.ticketuki.promocionservice.controller;
 
-import com.ticketuki.promocionservice.dto.PromocionDTO;
+import com.ticketuki.promocionservice.dto.PromocionRequestDTO;
+import com.ticketuki.promocionservice.dto.PromocionResponseDTO;
 import com.ticketuki.promocionservice.service.PromocionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,47 +20,48 @@ public class PromocionController {
     private final PromocionService promocionService;
 
     @GetMapping
-    public ResponseEntity<List<PromocionDTO>> listarPromociones() {
+    public ResponseEntity<List<PromocionResponseDTO>> listarPromociones() {
+        log.info("GET /promociones - Listando todas las promociones");
         return ResponseEntity.ok(promocionService.listarPromociones());
     }
 
     @PostMapping
-    public ResponseEntity<PromocionDTO> crearPromocion(@Valid @RequestBody PromocionDTO dto) {
+    public ResponseEntity<PromocionResponseDTO> crearPromocion(@Valid @RequestBody PromocionRequestDTO dto) {
+        log.info("POST /promociones - Creando promoción para empresa: {}", dto.getEmpresa());
         return ResponseEntity.status(HttpStatus.CREATED).body(promocionService.crearPromocion(dto));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PromocionDTO> obtenerPromocion(@PathVariable Long id) {
+    public ResponseEntity<PromocionResponseDTO> obtenerPromocion(@PathVariable Long id) {
+        log.info("GET /promociones/{} - Obteniendo promoción", id);
         return promocionService.obtenerPromocion(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PromocionDTO> actualizarPromocion(@PathVariable Long id, @Valid @RequestBody PromocionDTO dto) {
+    public ResponseEntity<PromocionResponseDTO> actualizarPromocion(@PathVariable Long id, @Valid @RequestBody PromocionRequestDTO dto) {
+        log.info("PUT /promociones/{} - Actualizando promoción", id);
         return ResponseEntity.ok(promocionService.actualizarPromocion(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarPromocion(@PathVariable Long id) {
+        log.info("DELETE /promociones/{} - Eliminando promoción", id);
         promocionService.eliminarPromocion(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/activas")
-    public ResponseEntity<List<PromocionDTO>> listarActivas() {
+    public ResponseEntity<List<PromocionResponseDTO>> listarActivas() {
+        log.info("GET /promociones/activas - Listando promociones activas");
         return ResponseEntity.ok(promocionService.listarActivas());
     }
 
     @GetMapping("/empresa/{empresa}")
-    public ResponseEntity<List<PromocionDTO>> listarPorEmpresa(@PathVariable String empresa) {
+    public ResponseEntity<List<PromocionResponseDTO>> listarPorEmpresa(@PathVariable String empresa) {
+        log.info("GET /promociones/empresa/{} - Listando promociones por empresa", empresa);
         return ResponseEntity.ok(promocionService.listarPorEmpresa(empresa));
     }
 
-    @GetMapping("/detalle/{idDetalle}")
-    public ResponseEntity<PromocionDTO> obtenerPorDetalle(@PathVariable Long idDetalle) {
-        return promocionService.obtenerPorDetalle(idDetalle)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
 }

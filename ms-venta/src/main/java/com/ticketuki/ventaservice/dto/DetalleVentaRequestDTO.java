@@ -24,4 +24,6 @@ public class DetalleVentaRequestDTO {
 
     @NotNull(message = "El sector es requerido")
     private Long sector_id_sector;
+
+    private Long promocion_id;
 }

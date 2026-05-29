@@ -11,10 +11,20 @@ public class WebClientConfig {
     @Value("${ms-estado.base-url}")
     private String estadoBaseUrl;
 
+    @Value("${ms-promocion.base-url:http://localhost:8007}")
+    private String promocionBaseUrl;
+
     @Bean
     public WebClient webClient() {
         return WebClient.builder()
                 .baseUrl(estadoBaseUrl)
+                .build();
+    }
+
+    @Bean("promocionWebClient")
+    public WebClient promocionWebClient() {
+        return WebClient.builder()
+                .baseUrl(promocionBaseUrl)
                 .build();
     }
 }

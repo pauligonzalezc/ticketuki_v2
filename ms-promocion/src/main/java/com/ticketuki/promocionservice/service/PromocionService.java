@@ -1,6 +1,7 @@
 package com.ticketuki.promocionservice.service;
 
-import com.ticketuki.promocionservice.dto.PromocionDTO;
+import com.ticketuki.promocionservice.dto.PromocionRequestDTO;
+import com.ticketuki.promocionservice.dto.PromocionResponseDTO;
 import com.ticketuki.promocionservice.model.Promocion;
 import com.ticketuki.promocionservice.exception.PromocionNotFoundException;
 import com.ticketuki.promocionservice.repository.PromocionRepository;
@@ -11,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -20,21 +20,45 @@ public class PromocionService {
 
     private final PromocionRepository promocionRepository;
 
-    private PromocionDTO toResponseDTO(Promocion p) {
-        return new PromocionDTO(p.getId_promocion(), p.getEmpresa(), p.getDescuento(), p.getDescripcion(),
-                p.getRestriccion(), p.getFecha_expiracion(), p.getFecha_inicio(), p.getDetalle_venta_id_detalle());
+    private PromocionResponseDTO toResponseDTO(Promocion p) {
+        return new PromocionResponseDTO(
+                p.getId_promocion(),
+                p.getEmpresa(),
+                p.getDescuento(),
+                p.getDescripcion(),
+                p.getRestriccion(),
+                p.getFecha_expiracion(),
+                p.getFecha_inicio(),
+                p.getCreated_at(),
+                p.getUpdated_at()
+        );
+    }
+
+    private void validarFechas(LocalDate fechaInicio, LocalDate fechaExpiracion) {
+        if (fechaInicio.isAfter(fechaExpiracion)) {
+            throw new IllegalArgumentException("La fecha de inicio no puede ser posterior a la fecha de expiración");
+        }
     }
 
     @Transactional
-    public PromocionDTO crearPromocion(PromocionDTO dto) {
+    public PromocionResponseDTO crearPromocion(PromocionRequestDTO dto) {
         log.info("Creando promoción de empresa: {}", dto.getEmpresa());
-        Promocion p = new Promocion(null, dto.getEmpresa(), dto.getDescuento(), dto.getDescripcion(),
-                dto.getRestriccion(), dto.getFecha_expiracion(), dto.getFecha_inicio(), dto.getDetalle_venta_id_detalle());
+        validarFechas(dto.getFecha_inicio(), dto.getFecha_expiracion());
+        Promocion p = Promocion.builder()
+                .empresa(dto.getEmpresa())
+                .descuento(dto.getDescuento())
+                .descripcion(dto.getDescripcion())
+                .restriccion(dto.getRestriccion())
+                .fecha_expiracion(dto.getFecha_expiracion())
+                .fecha_inicio(dto.getFecha_inicio())
+                .build();
         return toResponseDTO(promocionRepository.save(p));
     }
 
     @Transactional
-    public PromocionDTO actualizarPromocion(Long id, PromocionDTO dto) {
+    public PromocionResponseDTO actualizarPromocion(Long id, PromocionRequestDTO dto) {
+        log.info("Actualizando promoción con id: {}", id);
+        validarFechas(dto.getFecha_inicio(), dto.getFecha_expiracion());
         Promocion p = promocionRepository.findById(id)
                 .orElseThrow(() -> new PromocionNotFoundException("Promoción no encontrada: " + id));
         p.setEmpresa(dto.getEmpresa());
@@ -43,28 +67,27 @@ public class PromocionService {
         p.setRestriccion(dto.getRestriccion());
         p.setFecha_expiracion(dto.getFecha_expiracion());
         p.setFecha_inicio(dto.getFecha_inicio());
-        p.setDetalle_venta_id_detalle(dto.getDetalle_venta_id_detalle());
         return toResponseDTO(promocionRepository.save(p));
     }
 
     @Transactional(readOnly = true)
-    public Optional<PromocionDTO> obtenerPromocion(Long id) {
+    public Optional<PromocionResponseDTO> obtenerPromocion(Long id) {
         return promocionRepository.findById(id).map(this::toResponseDTO);
     }
 
     @Transactional(readOnly = true)
-    public List<PromocionDTO> listarPromociones() {
-        return promocionRepository.findAll().stream().map(this::toResponseDTO).collect(Collectors.toList());
+    public List<PromocionResponseDTO> listarPromociones() {
+        return promocionRepository.findAll().stream().map(this::toResponseDTO).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<PromocionDTO> listarActivas() {
-        return promocionRepository.findPromocionesActivas(LocalDate.now()).stream().map(this::toResponseDTO).collect(Collectors.toList());
+    public List<PromocionResponseDTO> listarActivas() {
+        return promocionRepository.findPromocionesActivas(LocalDate.now()).stream().map(this::toResponseDTO).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<PromocionDTO> listarPorEmpresa(String empresa) {
-        return promocionRepository.findByEmpresa(empresa).stream().map(this::toResponseDTO).collect(Collectors.toList());
+    public List<PromocionResponseDTO> listarPorEmpresa(String empresa) {
+        return promocionRepository.findByEmpresaIgnoreCase(empresa).stream().map(this::toResponseDTO).toList();
     }
 
     @Transactional
@@ -72,11 +95,7 @@ public class PromocionService {
         if (!promocionRepository.existsById(id)) {
             throw new PromocionNotFoundException("Promoción no encontrada: " + id);
         }
+        log.info("Eliminando promoción con id: {}", id);
         promocionRepository.deleteById(id);
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<PromocionDTO> obtenerPorDetalle(Long idDetalle) {
-        return promocionRepository.findByDetalle_venta_id_detalle(idDetalle).map(this::toResponseDTO);
     }
 }
