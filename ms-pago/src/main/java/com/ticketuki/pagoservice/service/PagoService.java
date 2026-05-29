@@ -19,7 +19,6 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-
 @Slf4j
 @Service
 public class PagoService {
@@ -202,9 +201,12 @@ public class PagoService {
     }
 
     @Transactional(readOnly = true)
-    public List<PagoResponseDTO> listarPorPeriodo(LocalDate inicio, LocalDate fin) {
+    public List<PagoResponseDTO> listarPorPeriodo(LocalDate desde, LocalDate hasta) {
+        if (desde.isAfter(hasta)) {
+            throw new IllegalArgumentException("La fecha 'desde' no puede ser posterior a 'hasta'");
+        }
         return pagoRepository.findByTimestampBetween(
-                inicio.atStartOfDay(), fin.atTime(23, 59, 59)
+                desde.atStartOfDay(), hasta.atTime(23, 59, 59)
         ).stream().map(this::toResponseDTO).toList();
     }
 }

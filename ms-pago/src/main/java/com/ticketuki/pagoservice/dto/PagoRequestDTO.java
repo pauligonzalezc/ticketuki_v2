@@ -1,5 +1,6 @@
 package com.ticketuki.pagoservice.dto;
 
+import com.ticketuki.pagoservice.model.MedioPago;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -16,8 +17,8 @@ public class PagoRequestDTO {
     @Positive(message = "El monto debe ser mayor a 0")
     private Long monto;
 
-    @NotBlank(message = "El medio de pago es requerido")
-    private String medio_pago;
+    @NotNull(message = "El medio de pago es requerido")
+    private MedioPago medio_pago;
 
     @NotBlank(message = "El código de autorización es requerido")
     private String cod_autorizacion;

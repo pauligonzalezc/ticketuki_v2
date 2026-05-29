@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -40,6 +41,13 @@ public class GlobalExceptionHandler {
         String mensaje = "Valor inválido para el parámetro '" + ex.getName() + "': " + ex.getValue();
         log.warn(mensaje);
         return buildResponse(HttpStatus.BAD_REQUEST, mensaje, request, null);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleNotReadable(HttpMessageNotReadableException ex, HttpServletRequest request) {
+        log.warn("Cuerpo de la solicitud inválido: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST,
+                "Valor de enum inválido. Valores aceptados — medio_pago: DEBITO, CREDITO, TRANSFERENCIA", request, null);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

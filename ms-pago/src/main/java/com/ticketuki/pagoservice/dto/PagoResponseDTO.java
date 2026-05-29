@@ -1,6 +1,7 @@
 package com.ticketuki.pagoservice.dto;
 
 import com.ticketuki.pagoservice.model.EstadoPago;
+import com.ticketuki.pagoservice.model.MedioPago;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,7 +14,7 @@ public class PagoResponseDTO {
 
     private Long id_pago;
     private Long monto;
-    private String medio_pago;
+    private MedioPago medio_pago;
     private String cod_autorizacion;
     private LocalDateTime timestamp;
     private EstadoPago estado;

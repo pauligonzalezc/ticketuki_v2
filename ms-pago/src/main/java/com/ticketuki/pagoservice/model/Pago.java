@@ -21,8 +21,9 @@ public class Pago {
     @Column(name = "monto", nullable = false)
     private Long monto;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "medio_pago", length = 50)
-    private String medio_pago;
+    private MedioPago medio_pago;
 
     @Column(name = "cod_autorizacion", nullable = false, length = 50)
     private String cod_autorizacion;
@@ -31,7 +32,7 @@ public class Pago {
     private LocalDateTime timestamp;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "estado", length = 25)
+    @Column(name = "estado", length = 25, nullable = false)
     private EstadoPago estado;
 
     @Column(name = "venta_id")
