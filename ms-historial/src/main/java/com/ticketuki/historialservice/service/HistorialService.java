@@ -1,16 +1,18 @@
 package com.ticketuki.historialservice.service;
 
-import com.ticketuki.historialservice.dto.HistorialDTO;
+import com.ticketuki.historialservice.dto.HistorialRequestDTO;
+import com.ticketuki.historialservice.dto.HistorialResponseDTO;
+import com.ticketuki.historialservice.exception.HistorialNotFoundException;
 import com.ticketuki.historialservice.model.Historial;
+import com.ticketuki.historialservice.model.TipoEntidad;
 import com.ticketuki.historialservice.repository.HistorialRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -19,41 +21,53 @@ public class HistorialService {
 
     private final HistorialRepository historialRepository;
 
-    private HistorialDTO toResponseDTO(Historial h) {
-        return new HistorialDTO(h.getId_historial(), h.getEntidad(), h.getId_entidad(), h.getAccion(),
+    private HistorialResponseDTO toResponseDTO(Historial h) {
+        return new HistorialResponseDTO(h.getId_historial(), h.getEntidad(), h.getId_entidad(), h.getAccion(),
                 h.getUsuario_id(), h.getTimestamp(), h.getCambios_anteriores(), h.getCambios_nuevos());
     }
 
     @Transactional
-    public HistorialDTO registrar(HistorialDTO dto) {
-        log.info("Registrando acción: {} en entidad: {}", dto.getAccion(), dto.getEntidad());
+    public HistorialResponseDTO registrar(HistorialRequestDTO dto) {
+        log.info("Registrando acción: {} en entidad: {} id: {}", dto.getAccion(), dto.getEntidad(), dto.getId_entidad());
         Historial h = new Historial(null, dto.getEntidad(), dto.getId_entidad(), dto.getAccion(),
-                dto.getUsuario_id(), LocalDate.now(), dto.getCambios_anteriores(), dto.getCambios_nuevos());
+                dto.getUsuario_id(), LocalDateTime.now(), dto.getCambios_anteriores(), dto.getCambios_nuevos());
         return toResponseDTO(historialRepository.save(h));
     }
 
     @Transactional(readOnly = true)
-    public Optional<HistorialDTO> obtenerHistorial(Long id) {
-        return historialRepository.findById(id).map(this::toResponseDTO);
+    public HistorialResponseDTO obtenerHistorial(Long id) {
+        log.info("Consultando historial id: {}", id);
+        return historialRepository.findById(id)
+                .map(this::toResponseDTO)
+                .orElseThrow(() -> new HistorialNotFoundException("Historial no encontrado con id: " + id));
     }
 
     @Transactional(readOnly = true)
-    public List<HistorialDTO> listarHistorial() {
-        return historialRepository.findAll().stream().map(this::toResponseDTO).collect(Collectors.toList());
+    public List<HistorialResponseDTO> listarHistorial() {
+        log.info("Listando todo el historial");
+        return historialRepository.findAll().stream().map(this::toResponseDTO).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<HistorialDTO> obtenerPorEntidad(String entidad, Integer idEntidad) {
-        return historialRepository.findByEntidadAndId_entidad(entidad, idEntidad).stream().map(this::toResponseDTO).collect(Collectors.toList());
+    public List<HistorialResponseDTO> obtenerPorEntidad(TipoEntidad entidad, Integer idEntidad) {
+        log.info("Consultando historial para entidad: {} id: {}", entidad, idEntidad);
+        return historialRepository.findByEntidadAndId_entidad(entidad, idEntidad).stream()
+                .map(this::toResponseDTO).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<HistorialDTO> obtenerPorUsuario(Integer usuarioId) {
-        return historialRepository.findByUsuario_id(usuarioId).stream().map(this::toResponseDTO).collect(Collectors.toList());
+    public List<HistorialResponseDTO> obtenerPorUsuario(Integer usuarioId) {
+        log.info("Consultando historial del usuario id: {}", usuarioId);
+        return historialRepository.findByUsuario_id(usuarioId).stream().map(this::toResponseDTO).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<HistorialDTO> obtenerPorPeriodo(LocalDate inicio, LocalDate fin) {
-        return historialRepository.findByTimestampBetween(inicio, fin).stream().map(this::toResponseDTO).collect(Collectors.toList());
+    public List<HistorialResponseDTO> obtenerPorPeriodo(LocalDate inicio, LocalDate fin) {
+        if (inicio.isAfter(fin)) {
+            throw new IllegalArgumentException("La fecha de inicio no puede ser posterior a la fecha de fin");
+        }
+        log.info("Consultando historial del período: {} al {}", inicio, fin);
+        return historialRepository.findByTimestampBetween(inicio.atStartOfDay(), fin.atTime(23, 59, 59))
+                .stream().map(this::toResponseDTO).toList();
     }
 }

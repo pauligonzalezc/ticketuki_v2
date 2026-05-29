@@ -1,6 +1,8 @@
 package com.ticketuki.historialservice.controller;
 
-import com.ticketuki.historialservice.dto.HistorialDTO;
+import com.ticketuki.historialservice.dto.HistorialRequestDTO;
+import com.ticketuki.historialservice.dto.HistorialResponseDTO;
+import com.ticketuki.historialservice.model.TipoEntidad;
 import com.ticketuki.historialservice.service.HistorialService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,35 +23,33 @@ public class HistorialController {
     private final HistorialService historialService;
 
     @PostMapping
-    public ResponseEntity<HistorialDTO> registrar(@Valid @RequestBody HistorialDTO dto) {
+    public ResponseEntity<HistorialResponseDTO> registrar(@Valid @RequestBody HistorialRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(historialService.registrar(dto));
     }
 
     @GetMapping("/{idHistorial}")
-    public ResponseEntity<HistorialDTO> obtenerHistorial(@PathVariable Long idHistorial) {
-        return historialService.obtenerHistorial(idHistorial)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<HistorialResponseDTO> obtenerHistorial(@PathVariable Long idHistorial) {
+        return ResponseEntity.ok(historialService.obtenerHistorial(idHistorial));
     }
 
     @GetMapping
-    public ResponseEntity<List<HistorialDTO>> listarHistorial() {
+    public ResponseEntity<List<HistorialResponseDTO>> listarHistorial() {
         return ResponseEntity.ok(historialService.listarHistorial());
     }
 
     @GetMapping("/entidad/{entidad}/{idEntidad}")
-    public ResponseEntity<List<HistorialDTO>> obtenerPorEntidad(
-            @PathVariable String entidad, @PathVariable Integer idEntidad) {
+    public ResponseEntity<List<HistorialResponseDTO>> obtenerPorEntidad(
+            @PathVariable TipoEntidad entidad, @PathVariable Integer idEntidad) {
         return ResponseEntity.ok(historialService.obtenerPorEntidad(entidad, idEntidad));
     }
 
     @GetMapping("/usuario/{idUsuario}")
-    public ResponseEntity<List<HistorialDTO>> obtenerPorUsuario(@PathVariable Integer idUsuario) {
+    public ResponseEntity<List<HistorialResponseDTO>> obtenerPorUsuario(@PathVariable Integer idUsuario) {
         return ResponseEntity.ok(historialService.obtenerPorUsuario(idUsuario));
     }
 
     @GetMapping("/fecha/{inicio}/{fin}")
-    public ResponseEntity<List<HistorialDTO>> obtenerPorPeriodo(
+    public ResponseEntity<List<HistorialResponseDTO>> obtenerPorPeriodo(
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fin) {
         return ResponseEntity.ok(historialService.obtenerPorPeriodo(inicio, fin));
