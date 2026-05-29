@@ -14,17 +14,21 @@ public class WebClientConfig {
     @Value("${ms.usuario.url:http://localhost:8001}")
     private String usuarioUrl;
 
+    @Value("${ms.ticket.url:http://localhost:8005}")
+    private String ticketUrl;
+
     @Bean("ventaWebClient")
     public WebClient ventaWebClient() {
-        return WebClient.builder()
-                .baseUrl(ventaUrl)
-                .build();
+        return WebClient.builder().baseUrl(ventaUrl).build();
     }
 
     @Bean("usuarioWebClient")
     public WebClient usuarioWebClient() {
-        return WebClient.builder()
-                .baseUrl(usuarioUrl)
-                .build();
+        return WebClient.builder().baseUrl(usuarioUrl).build();
+    }
+
+    @Bean("ticketWebClient")
+    public WebClient ticketWebClient() {
+        return WebClient.builder().baseUrl(ticketUrl).build();
     }
 }
