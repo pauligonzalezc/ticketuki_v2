@@ -5,9 +5,5 @@ CREATE TABLE evento (
     fecha_evento DATE NOT NULL,
     descripcion VARCHAR(500) NOT NULL,
     estado_evento_id_estado BIGINT,
-    recinto_id_recinto BIGINT,
---    INDEX idx_nombre (nombre_evento),
---    INDEX idx_fecha (fecha_evento),
-    INDEX idx_estado (estado_evento_id_estado),
-    INDEX idx_recinto (recinto_id_recinto)
+    recinto_id_recinto BIGINT
 );

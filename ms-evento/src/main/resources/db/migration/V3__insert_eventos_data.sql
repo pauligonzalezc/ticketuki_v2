@@ -1,10 +1,8 @@
--- Eliminar FK constraints hacia otros microservicios (estado_evento y recinto son BD externas)
--- En arquitectura de microservicios cada servicio gestiona su propia BD;
--- la integridad referencial entre servicios se garantiza a nivel de aplicación, no de BD.
+
 ALTER TABLE evento DROP FOREIGN KEY IF EXISTS evento_ibfk_1;
 ALTER TABLE evento DROP FOREIGN KEY IF EXISTS evento_ibfk_2;
 
--- Datos iniciales de eventos
+
 INSERT INTO evento (id_evento, nombre_evento, aforo_evento, fecha_evento, descripcion, estado_evento_id_estado, recinto_id_recinto) VALUES
 (1, 'Gorillaz The Mountain Tour', 100, '2026-06-15',
  'La icónica banda virtual británica Gorillaz llega con su esperado tour mundial. Una experiencia audiovisual única que combina música alternativa, hip-hop y arte digital con sus personajes animados en pantallas gigantes.',

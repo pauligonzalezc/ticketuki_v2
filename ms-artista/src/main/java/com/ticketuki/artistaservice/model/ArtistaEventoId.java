@@ -9,6 +9,6 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ArtistaEventoId implements Serializable {
-    private Long artista_id_artista;
-    private Long evento_id_evento;
+    private Long artistaIdArtista;
+    private Long eventoIdEvento;
 }

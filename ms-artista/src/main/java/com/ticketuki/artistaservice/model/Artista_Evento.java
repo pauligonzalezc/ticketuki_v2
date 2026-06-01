@@ -15,9 +15,9 @@ public class Artista_Evento {
 
     @Id
     @Column(name = "artista_id_artista")
-    private Long artista_id_artista;
+    private Long artistaIdArtista;
 
     @Id
     @Column(name = "evento_id_evento")
-    private Long evento_id_evento;
+    private Long eventoIdEvento;
 }

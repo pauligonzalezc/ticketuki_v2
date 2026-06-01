@@ -12,16 +12,14 @@ import java.util.List;
 @Repository
 public interface ArtistaEventoRepository extends JpaRepository<Artista_Evento, ArtistaEventoId> {
 
-    @Query("SELECT ae FROM Artista_Evento ae WHERE ae.evento_id_evento = :evento_id_evento")
-    List<Artista_Evento> findByEvento_id_evento(@Param("evento_id_evento") Long evento_id_evento);
+    List<Artista_Evento> findByEventoIdEvento(Long eventoIdEvento);
 
-    @Query("SELECT ae FROM Artista_Evento ae WHERE ae.artista_id_artista = :artista_id_artista")
-    List<Artista_Evento> findByArtista_id_artista(@Param("artista_id_artista") Long artista_id_artista);
+    List<Artista_Evento> findByArtistaIdArtista(Long artistaIdArtista);
 
-    @Query("SELECT COUNT(ae) > 0 FROM Artista_Evento ae WHERE ae.artista_id_artista = :artista_id_artista AND ae.evento_id_evento = :evento_id_evento")
-    boolean existsByArtista_id_artistaAndEvento_id_evento(@Param("artista_id_artista") Long artista_id_artista, @Param("evento_id_evento") Long evento_id_evento);
+    boolean existsByArtistaIdArtistaAndEventoIdEvento(Long artistaIdArtista, Long eventoIdEvento);
 
-    @Query("SELECT a FROM Artista a WHERE a.id_artista IN " +
-           "(SELECT ae.artista_id_artista FROM Artista_Evento ae WHERE ae.evento_id_evento = :idEvento)")
+    // ✅ JPQL ahora coincide con los campos camelCase de las entidades
+    @Query("SELECT a FROM Artista a WHERE a.idArtista IN " +
+            "(SELECT ae.artistaIdArtista FROM Artista_Evento ae WHERE ae.eventoIdEvento = :idEvento)")
     List<Artista> findArtistasByEventoId(@Param("idEvento") Long idEvento);
 }

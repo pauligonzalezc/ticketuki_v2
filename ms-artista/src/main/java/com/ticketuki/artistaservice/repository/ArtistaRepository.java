@@ -10,9 +10,9 @@ import java.util.List;
 @Repository
 public interface ArtistaRepository extends JpaRepository<Artista, Long> {
 
-    @Query("SELECT a FROM Artista a WHERE a.genero_artista = :genero")
-    List<Artista> findByGenero_artista(@Param("genero") String genero);
+    @Query("SELECT a FROM Artista a WHERE a.generoArtista = :genero")
+    List<Artista> findByGeneroArtista(@Param("genero") String genero);
 
-    @Query("SELECT a FROM Artista a WHERE LOWER(a.nombre_artista) LIKE LOWER(CONCAT('%', :nombre, '%'))")
+    @Query("SELECT a FROM Artista a WHERE LOWER(a.nombreArtista) LIKE LOWER(CONCAT('%', :nombre, '%'))")
     List<Artista> findByNombreContaining(@Param("nombre") String nombre);
 }

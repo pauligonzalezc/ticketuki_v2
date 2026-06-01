@@ -46,23 +46,22 @@ public class TicketService {
         this.ventaWebClient = ventaWebClient;
     }
 
-    // Cache en memoria: se carga una sola vez al primer uso
     private volatile List<EstadoTicketDTO> estadosCache = null;
 
     // --- Helpers de mapeo ---
 
     private TicketResponseDTO toResponseDTO(Ticket ticket) {
         return new TicketResponseDTO(
-                ticket.getId_ticket(),
-                ticket.getCod_qr(),
-                ticket.getNum_asiento(),
-                ticket.getNombre_titular(),
-                ticket.getRun_titular(),
-                ticket.getFecha_emision(),
-                ticket.getVenta_id_venta(),
-                ticket.getEstado_ticket_id_estado(),
-                ticket.getEvento_id_evento(),
-                ticket.getSector_id_sector()
+                ticket.getIdTicket(),
+                ticket.getCodQr(),
+                ticket.getNumAsiento(),
+                ticket.getNombreTitular(),
+                ticket.getRunTitular(),
+                ticket.getFechaEmision(),
+                ticket.getVentaIdVenta(),
+                ticket.getEstadoTicketIdEstado(),
+                ticket.getEventoIdEvento(),
+                ticket.getSectorIdSector()
         );
     }
 
@@ -108,10 +107,10 @@ public class TicketService {
         return id;
     }
 
-    // --- Validaciones de estado para operaciones ---
+    // --- Validaciones de estado ---
 
     private void verificarModificable(Ticket ticket) {
-        String nombre = obtenerNombreEstado(ticket.getEstado_ticket_id_estado());
+        String nombre = obtenerNombreEstado(ticket.getEstadoTicketIdEstado());
         if (nombre == null) return;
         String n = nombre.toUpperCase();
         if (n.contains("USADO") || n.contains("CANCELADO")) {
@@ -121,7 +120,7 @@ public class TicketService {
     }
 
     private void verificarCambiableEstado(Ticket ticket) {
-        String nombre = obtenerNombreEstado(ticket.getEstado_ticket_id_estado());
+        String nombre = obtenerNombreEstado(ticket.getEstadoTicketIdEstado());
         if (nombre == null) return;
         String n = nombre.toUpperCase();
         if (n.contains("USADO") || n.contains("CANCELADO")) {
@@ -131,7 +130,7 @@ public class TicketService {
     }
 
     private void verificarEliminable(Ticket ticket) {
-        String nombre = obtenerNombreEstado(ticket.getEstado_ticket_id_estado());
+        String nombre = obtenerNombreEstado(ticket.getEstadoTicketIdEstado());
         if (nombre == null) return;
         if (nombre.toUpperCase().contains("USADO")) {
             throw new TicketOperacionInvalidaException(
@@ -190,7 +189,7 @@ public class TicketService {
     }
 
     private void validarAsientoDisponible(Integer numAsiento, Long eventoId, Long sectorId) {
-        if (ticketRepository.existsByNum_asientoAndEvento_id_eventoAndSector_id_sector(
+        if (ticketRepository.existsByNumAsientoAndEventoIdEventoAndSectorIdSector(
                 numAsiento, eventoId, sectorId)) {
             throw new TicketOperacionInvalidaException(
                     "El asiento " + numAsiento + " ya está ocupado en este evento y sector");
@@ -204,9 +203,7 @@ public class TicketService {
         log.info("Creando ticket para evento: {}", dto.getEvento_id_evento());
         validarEvento(dto.getEvento_id_evento());
         validarSector(dto.getSector_id_sector());
-        if (dto.getVenta_id_venta() != null) {
-            validarVenta(dto.getVenta_id_venta());
-        }
+        if (dto.getVenta_id_venta() != null) validarVenta(dto.getVenta_id_venta());
         validarAsientoDisponible(dto.getNum_asiento(), dto.getEvento_id_evento(), dto.getSector_id_sector());
         Long estadoInicial = obtenerEstadoInicial();
         Ticket ticket = new Ticket(
@@ -221,17 +218,15 @@ public class TicketService {
                 dto.getEvento_id_evento(),
                 dto.getSector_id_sector()
         );
-        // Reintento solo por colisión de cod_qr (probabilidad extremadamente baja)
         try {
             return toResponseDTO(ticketRepository.save(ticket));
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
             String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
             if (msg.contains("cod_qr") || msg.contains("unique") && !msg.contains("num_asiento")) {
                 log.warn("Colisión de código QR al crear ticket, reintentando...");
-                ticket.setCod_qr(QRGenerator.generarCodigoQR());
+                ticket.setCodQr(QRGenerator.generarCodigoQR());
                 return toResponseDTO(ticketRepository.save(ticket));
             }
-            // Otro error de integridad (p.ej. asiento duplicado): relanzar
             throw e;
         }
     }
@@ -241,8 +236,8 @@ public class TicketService {
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new TicketNotFoundException("Ticket no encontrado: " + id));
         verificarModificable(ticket);
-        ticket.setNombre_titular(dto.getNombre_titular());
-        ticket.setRun_titular(dto.getRun_titular());
+        ticket.setNombreTitular(dto.getNombre_titular());
+        ticket.setRunTitular(dto.getRun_titular());
         return toResponseDTO(ticketRepository.save(ticket));
     }
 
@@ -252,7 +247,7 @@ public class TicketService {
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new TicketNotFoundException("Ticket no encontrado: " + id));
         verificarCambiableEstado(ticket);
-        ticket.setEstado_ticket_id_estado(idEstado);
+        ticket.setEstadoTicketIdEstado(idEstado);
         return toResponseDTO(ticketRepository.save(ticket));
     }
 
@@ -266,9 +261,9 @@ public class TicketService {
 
     @Transactional
     public ValidarTicketResponseDTO validarTicket(String codQR) {
-        Ticket ticket = ticketRepository.findByCod_qr(codQR)
+        Ticket ticket = ticketRepository.findByCodQr(codQR)
                 .orElseThrow(() -> new TicketNotFoundException("Ticket no encontrado para QR: " + codQR));
-        String nombreEstado = obtenerNombreEstado(ticket.getEstado_ticket_id_estado());
+        String nombreEstado = obtenerNombreEstado(ticket.getEstadoTicketIdEstado());
         if (nombreEstado == null || !nombreEstado.toUpperCase().contains("VALID")) {
             return new ValidarTicketResponseDTO(false,
                     "Ticket no válido. Estado actual: " + nombreEstado,
@@ -279,7 +274,7 @@ public class TicketService {
             throw new TicketOperacionInvalidaException(
                     "No se puede marcar el ticket como usado: estado 'USADO' no disponible en ms-estado");
         }
-        ticket.setEstado_ticket_id_estado(idUsado);
+        ticket.setEstadoTicketIdEstado(idUsado);
         return new ValidarTicketResponseDTO(true,
                 "Ticket validado correctamente",
                 toResponseDTO(ticketRepository.save(ticket)));
@@ -289,7 +284,7 @@ public class TicketService {
     public TicketResponseDTO transferirTicket(Long id, TransferirTicketDTO dto) {
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new TicketNotFoundException("Ticket no encontrado: " + id));
-        String nombreEstado = obtenerNombreEstado(ticket.getEstado_ticket_id_estado());
+        String nombreEstado = obtenerNombreEstado(ticket.getEstadoTicketIdEstado());
         if (nombreEstado == null || !nombreEstado.toUpperCase().contains("VALID")) {
             throw new TicketOperacionInvalidaException(
                     "Solo se pueden transferir tickets en estado 'VÁLIDO'. Estado actual: " + nombreEstado);
@@ -299,9 +294,9 @@ public class TicketService {
             throw new TicketOperacionInvalidaException(
                     "No se puede transferir el ticket: estado 'TRANSFERIDO' no disponible en ms-estado");
         }
-        ticket.setNombre_titular(dto.getNombre_titular());
-        ticket.setRun_titular(dto.getRun_titular());
-        ticket.setEstado_ticket_id_estado(idTransferido);
+        ticket.setNombreTitular(dto.getNombre_titular());
+        ticket.setRunTitular(dto.getRun_titular());
+        ticket.setEstadoTicketIdEstado(idTransferido);
         return toResponseDTO(ticketRepository.save(ticket));
     }
 
@@ -316,7 +311,7 @@ public class TicketService {
 
     @Transactional(readOnly = true)
     public Optional<TicketResponseDTO> obtenerPorQR(String codQR) {
-        return ticketRepository.findByCod_qr(codQR).map(this::toResponseDTO);
+        return ticketRepository.findByCodQr(codQR).map(this::toResponseDTO);
     }
 
     @Transactional(readOnly = true)
@@ -326,25 +321,25 @@ public class TicketService {
 
     @Transactional(readOnly = true)
     public List<TicketResponseDTO> listarPorEvento(Long eventoId) {
-        return ticketRepository.findByEvento_id_evento(eventoId).stream()
+        return ticketRepository.findByEventoIdEvento(eventoId).stream()
                 .map(this::toResponseDTO).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<TicketResponseDTO> listarPorVenta(Long ventaId) {
-        return ticketRepository.findByVenta_id_venta(ventaId).stream()
+        return ticketRepository.findByVentaIdVenta(ventaId).stream()
                 .map(this::toResponseDTO).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<TicketResponseDTO> listarPorSector(Long sectorId) {
-        return ticketRepository.findBySector_id_sector(sectorId).stream()
+        return ticketRepository.findBySectorIdSector(sectorId).stream()
                 .map(this::toResponseDTO).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<TicketResponseDTO> listarPorRun(String run) {
-        return ticketRepository.findByRun_titular(run).stream()
+        return ticketRepository.findByRunTitular(run).stream()
                 .map(this::toResponseDTO).collect(Collectors.toList());
     }
 }

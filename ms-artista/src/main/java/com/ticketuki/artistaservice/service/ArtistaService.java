@@ -23,8 +23,14 @@ public class ArtistaService {
     private final ArtistaRepository artistaRepository;
     private final ArtistaEventoRepository artistaEventoRepository;
 
+    // ✅ Getters generados por Lombok con camelCase: getIdArtista(), getNombreArtista()...
     private ArtistaResponseDTO toResponseDTO(Artista artista) {
-        return new ArtistaResponseDTO(artista.getId_artista(), artista.getNombre_artista(), artista.getGenero_artista(), artista.getRedes_sociales());
+        return new ArtistaResponseDTO(
+                artista.getIdArtista(),
+                artista.getNombreArtista(),
+                artista.getGeneroArtista(),
+                artista.getRedesSociales()
+        );
     }
 
     @Transactional
@@ -42,9 +48,9 @@ public class ArtistaService {
                     log.warn("Artista no encontrado para actualizar: {}", id);
                     return new ArtistaNotFoundException("Artista no encontrado: " + id);
                 });
-        artista.setNombre_artista(dto.getNombre_artista());
-        artista.setGenero_artista(dto.getGenero_artista());
-        artista.setRedes_sociales(dto.getRedes_sociales());
+        artista.setNombreArtista(dto.getNombre_artista());
+        artista.setGeneroArtista(dto.getGenero_artista());
+        artista.setRedesSociales(dto.getRedes_sociales());
         return toResponseDTO(artistaRepository.save(artista));
     }
 
@@ -65,14 +71,14 @@ public class ArtistaService {
         if (!artistaRepository.existsById(id)) {
             throw new ArtistaNotFoundException("Artista no encontrado: " + id);
         }
-        artistaEventoRepository.deleteAll(artistaEventoRepository.findByArtista_id_artista(id));
+        artistaEventoRepository.deleteAll(artistaEventoRepository.findByArtistaIdArtista(id));
         artistaRepository.deleteById(id);
     }
 
     @Transactional(readOnly = true)
     public List<ArtistaResponseDTO> listarPorGenero(String genero) {
         log.info("Listando artistas por género: {}", genero);
-        return artistaRepository.findByGenero_artista(genero).stream().map(this::toResponseDTO).toList();
+        return artistaRepository.findByGeneroArtista(genero).stream().map(this::toResponseDTO).toList();
     }
 
     @Transactional
@@ -80,7 +86,7 @@ public class ArtistaService {
         if (!artistaRepository.existsById(idArtista)) {
             throw new ArtistaNotFoundException("Artista no encontrado: " + idArtista);
         }
-        if (artistaEventoRepository.existsByArtista_id_artistaAndEvento_id_evento(idArtista, idEvento)) {
+        if (artistaEventoRepository.existsByArtistaIdArtistaAndEventoIdEvento(idArtista, idEvento)) {
             throw new ArtistaEventoDuplicadoException("El artista " + idArtista + " ya está asociado al evento " + idEvento);
         }
         artistaEventoRepository.save(new Artista_Evento(idArtista, idEvento));
@@ -88,7 +94,7 @@ public class ArtistaService {
 
     @Transactional
     public void desasociarArtistaEvento(Long idArtista, Long idEvento) {
-        if (!artistaEventoRepository.existsByArtista_id_artistaAndEvento_id_evento(idArtista, idEvento)) {
+        if (!artistaEventoRepository.existsByArtistaIdArtistaAndEventoIdEvento(idArtista, idEvento)) {
             throw new ArtistaNotFoundException("Asociación no encontrada para artista " + idArtista + " y evento " + idEvento);
         }
         artistaEventoRepository.deleteById(new ArtistaEventoId(idArtista, idEvento));

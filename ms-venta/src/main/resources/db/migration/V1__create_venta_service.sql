@@ -3,8 +3,8 @@ CREATE TABLE venta (
     fecha_venta DATE NOT NULL,
     medio_pago VARCHAR(10) NOT NULL,
     cod_autorizacion INTEGER NOT NULL,
-    estado_venta_id_estado BIGINT,
-    INDEX idx_estado (estado_venta_id_estado)
+    estado_venta_id_estado BIGINT
+--    FOREIGN KEY (estado_venta_id_estado) REFERENCES estado_venta(id_estado_venta)
 );
 
 CREATE TABLE detalle_venta (
